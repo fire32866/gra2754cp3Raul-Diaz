@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spooky Drag and Drop Match</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifier&display=swap" rel="stylesheet">
+    
+    <style>
+        
+        body {
+            
+            font-family: 'Nosifier', cursive; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #121212; 
+            color: #f5f5dc; 
+        }
+
+        
+        .glowing-bar {
+            position: fixed; 
+            left: 0;
+            width: 100%;
+            height: 10px; 
+            background-color: transparent;
+            z-index: 1000; 
+            
+            box-shadow: 0 0 15px 5px rgba(255, 102, 0, 0.8), 
+                        0 0 30px 10px rgba(255, 102, 0, 0.4);
+            animation: slow-color-glow 4s ease-in-out infinite alternate; 
+        }
+
+        .bar-top {
+            top: 0;
+        }
+
+        .bar-bottom {
+            bottom: 0;
+        }
+
+        @keyframes slow-color-glow {
+            0% {
+                
+                box-shadow: 0 0 15px 5px rgba(255, 102, 0, 0.8), 
+                            0 0 30px 10px rgba(255, 102, 0, 0.4);
+            }
+            100% {
+               
+                box-shadow: 0 0 15px 5px rgba(153, 255, 153, 0.8), 
+                            0 0 30px 10px rgba(153, 255, 153, 0.4);
+            }
+        }
+        
+        h1 {
+            
+            font-family: 'Creepster', cursive;
+            margin-bottom: 5px;
+            color: #ff6600; 
+            font-size: 3.5em; 
+            text-shadow: 4px 4px 6px #000000;
+        }
+
+        p {
+            color: #aaaaaa;
+            font-size: 1.1em;
+        }
+        
+        #game-message {
+            
+            font-family: 'Creepster', cursive; 
+            font-size: 2.2em;     
+            font-weight: bold;
+            color: #99ff99; 
+            text-shadow: 2px 2px 3px #000;
+        }
+
+        
+        #game-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 70px; 
+            margin: 30px;
+            padding: 20px;
+        }
+
+        #draggable-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px; 
+            padding: 30px;
+            border: 4px dashed #ff6600; 
+            background-color: #2c2c2c; 
+            border-radius: 12px;
+        }
+
+       
+        .draggable {
+            width: 120px; 
+            height: 120px; 
+            cursor: grab;
+            border-radius: 15px;
+            box-shadow: 0 8px 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em; 
+            transition: transform 0.2s;
+        }
+
+        
+        .draggable[data-item="pumpkin"] { 
+            background-color: #ff6600;
+            content: "🎃"; 
+        }
+        .draggable[data-item="ghost"] { 
+            background-color: #f5f5f5; 
+            color: #121212;
+            content: "👻"; 
+        }
+        .draggable[data-item="bat"] { 
+            background-color: #333333; 
+            color: #ff6600;
+            content: "🦇"; /
+        }
+
+        .dragging {
+            opacity: 0.7;
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        #drop-targets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px; 
+            padding: 30px;
+            border: 4px solid #6a0dad; 
+            background-color: #1e1e1e; 
+            border-radius: 12px;
+        }
+
+        
+        .drop-target {
+            width: 140px; 
+            height: 140px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.8em; 
+            color: #f5f5dc;
+            border-radius: 15px;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+
+        
+        .drop-target[data-item="pumpkin"] { background-color: #cc5200; }
+        .drop-target[data-item="ghost"] { background-color: #888888; }
+        .drop-target[data-item="bat"] { background-color: #1a1a1a; }
+
+        .over {
+            border: 5px solid yellowgreen; 
+            transform: scale(1.05);
+        }
+
+        .correct-match {
+            animation: spooky-glow 1s ease-in-out infinite alternate;
+        }
+
+        #message-container {
+            margin-top: 30px;
+        }
+
+        #reset-button {
+            margin-top: 30px;
+            padding: 15px 30px; 
+            font-size: 1.2em; 
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #6a0dad; 
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background-color 0.3s;
+        }
+        #reset-button:hover {
+            background-color: #8c2dbf;
+        }
+
+        @keyframes spooky-glow {
+            from { box-shadow: 0 0 10px #ff6600, 0 0 20px #ff6600; }
+            to { box-shadow: 0 0 15px #ff6600, 0 0 30px #ff6600; }
+        }
+
+        
+        footer {
+           
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 10px 0;
+            background-color: #000; 
+            text-align: center;
+            z-index: 999; 
+            line-height: 1.4;
+        }
+        
+        footer small {
+            
+            font-size: 0.75em;
+            color: #555; 
+            display: block; 
+            max-width: 800px;
+            margin: 0 auto; 
+            padding: 0 10px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="glowing-bar bar-top"></div>
+
+    <h1> 🐦‍⬛Match the Spooky Stuff!🐦‍⬛</h1>
+    <p>Drag each Spooky item to its matching word target.</p>
+    
+    <div id="game-container">
+        <div id="draggable-items">
+            <div class="draggable" draggable="true" data-item="pumpkin">🎃</div>
+            <div class="draggable" draggable="true" data-item="ghost">👻</div>
+            <div class="draggable" draggable="true" data-item="bat">🦇</div>
+        </div>
+
+        <div id="drop-targets">
+            <div class="drop-target" data-item="ghost">GHOST</div>
+            <div class="drop-target" data-item="bat">BAT</div>
+            <div class="drop-target" data-item="pumpkin">PUMPKIN</div>
+        </div>
+    </div>
+    
+    <div id="message-container">
+        <p id="game-message"></p>
+    </div>
+
+    <button id="reset-button" style="display: none;">Conjure New Game</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const draggables = document.querySelectorAll('.draggable');
+            const dropTargets = document.querySelectorAll('.drop-target');
+            const gameMessage = document.getElementById('game-message');
+            const resetButton = document.getElementById('reset-button');
+            let correctMatches = 0;
+
+            const itemAttribute = 'data-item';
+
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', dragStart);
+                draggable.addEventListener('dragend', dragEnd);
+            });
+
+            dropTargets.forEach(target => {
+                target.addEventListener('dragover', dragOver);
+                target.addEventListener('dragleave', dragLeave);
+                target.addEventListener('drop', drop);
+            });
+
+            resetButton.addEventListener('click', resetGame);
+
+            function dragStart(e) {
+                e.dataTransfer.setData('text/plain', e.target.getAttribute(itemAttribute));
+                e.target.classList.add('dragging');
+            }
+
+            function dragEnd(e) {
+                e.target.classList.remove('dragging');
+            }
+
+            function dragOver(e) {
+                e.preventDefault();
+                const draggedItem = e.dataTransfer.getData('text/plain');
+                if (e.target.getAttribute(itemAttribute) === draggedItem) {
+                    e.target.classList.add('over');
+                }
+            }
+
+            function dragLeave(e) {
+                e.target.classList.remove('over');
+            }
+
+            function drop(e) {
+                e.preventDefault();
+                e.target.classList.remove('over');
+                const draggedItem = e.dataTransfer.getData('text/plain');
+                const draggedElement = document.querySelector(`.draggable.dragging`);
+
+                if (!draggedElement) return;
+
+                if (e.target.getAttribute(itemAttribute) === draggedItem) {
+                    e.target.appendChild(draggedElement);
+                    draggedElement.draggable = false;
+                    e.target.classList.add('correct-match');
+                    draggedElement.style.margin = 'auto';
+                    draggedElement.style.cursor = 'default';
+                    draggedElement.style.fontSize = '2.5em';
+                    correctMatches++;
+                    checkWin();
+                } else {
+                    gameMessage.textContent = '👹 Wrong spot! Try again.👹';
+                    setTimeout(() => gameMessage.textContent = '', 1000);
+                }
+            }
+
+            function checkWin() {
+                if (correctMatches === draggables.length) {
+                    gameMessage.textContent = ' 👻 You have completed the Spooky Match! Happy Halloween!  👻';
+                    resetButton.style.display = 'block';
+                }
+            }
+
+            function resetGame() {
+                correctMatches = 0;
+                gameMessage.textContent = '';
+                resetButton.style.display = 'none';
+
+                const draggableContainer = document.getElementById('draggable-items');
+                
+                draggables.forEach(draggable => {
+                    draggable.draggable = true;
+                    draggable.style.margin = '';
+                    draggable.style.cursor = 'grab';
+                    draggable.style.fontSize = '2.5em';
+                    draggableContainer.appendChild(draggable);
+                });
+
+                dropTargets.forEach(target => {
+                    target.classList.remove('correct-match');
+                    
+                    while (target.firstChild && target.firstChild.nodeType !== 3) { 
+                        target.removeChild(target.firstChild);
+                    }
+                   
+                });
+            }
+        });
+    </script>
+
+    <div class="glowing-bar bar-bottom"></div>
+    
+    <footer>
+        <small>
+            Raul Diaz 2025 | This is a fictitious web page created solely for the purpose of education and training. All products and people associated with this web page are also fictitious. Any resemblance to real brands, products, or people is purely coincidental. Information provided about the product is also fictitious and should not be construed to be representative of actual products on the market in a similar product category.
+        </small>
+    </footer>
+</body>
+</html>
